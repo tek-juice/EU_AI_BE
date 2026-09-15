@@ -1,0 +1,56 @@
+services:
+  eube:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: eube
+    restart: unless-stopped
+
+    ports:
+      - "5000:5000"
+
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+
+    depends_on:
+      eupg:
+        condition: service_healthy
+
+    volumes:
+      - .:/EU_AI_BE
+
+    networks:
+      - eu_network
+
+  eupg:
+    image: pgvector/pgvector:pg16
+    container_name: eupg
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - eupg_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+    networks:
+      - eu_network
+
+volumes:
+  eupg_data:
+
+networks:
+  eu_network:
+    driver: bridge
