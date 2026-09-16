@@ -3,7 +3,8 @@ from flask_cors import CORS
 from flasgger import Swagger
 from config.extensions import Config
 from config.extensions import db, migrate, jwt
-from routes.client_auth import auth_bp
+from routes.client_auth import client_auth_bp
+from routes.admin_auth import admin_auth_bp
 
 
 app = Flask(__name__)
@@ -18,7 +19,8 @@ jwt.init_app(app)
 
 Swagger(app)
 
-app.register_blueprint(auth_bp)
+app.register_blueprint(client_auth_bp)
+app.register_blueprint(admin_auth_bp)
 
 
 if __name__ == "__main__":
