@@ -222,3 +222,67 @@ class ActivityRate(db.Model):
 
     def __repr__(self):
         return f"<ActivityRate {self.price} {self.currency}>"
+
+
+class Itinerary(db.Model):
+    __tablename__ = "itineraries"
+
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    number_of_days = db.Column(db.Integer, nullable=False)
+    number_of_nights = db.Column(db.Integer, nullable=False)
+    start_date = db.Column(db.Date, nullable=True)
+    end_date = db.Column(db.Date, nullable=True)
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime,nullable=False,server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
+
+    days = db.relationship(
+        "ItineraryDay",
+        back_populates="itinerary",
+        cascade="all, delete-orphan",
+        order_by="ItineraryDay.day_number",
+        lazy=True
+    )
+
+    def __repr__(self):
+        return f"<Itinerary {self.name}>"
+
+
+class ItineraryDayActivity(db.Model):
+    __tablename__ = "itinerary_day_activities"
+
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    itinerary_day_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("itinerary_days.id", ondelete="CASCADE"), nullable=False, index=True)
+    activity_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("activities.id", ondelete="CASCADE"), nullable=False, index=True)
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
+    start_time = db.Column(db.Time, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    itinerary_day = db.relationship("ItineraryDay", back_populates="activities")
+    activity = db.relationship("Activity")
+
+    def __repr__(self):
+        return f"<ItineraryDayActivity {self.id}>"
+
+
+
+class Transport(db.Model):
+    __tablename__ = "transports"
+
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, nullable=True)
+    transport_type = db.Column(db.String(100), nullable=False)
+    # safari_vehicle, car, van, bus, boat, domestic_flight, etc.
+    capacity = db.Column(db.Integer, nullable=True)
+    price = db.Column(db.Numeric(12, 2), nullable=True)
+    currency = db.Column(db.String(10), nullable=False, default="USD")
+    pricing_type = db.Column(db.String(50), nullable=False, default="per_trip")
+    # per_trip, per_day, per_person, etc.
+    is_active = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now(), onupdate=db.func.now())
+
+    def __repr__(self):
+        return f"<Transport {self.name}>"
