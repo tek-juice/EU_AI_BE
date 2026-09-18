@@ -1603,3 +1603,110 @@ def create_activity_rate():
             "error": str(e)
         }), 500
 
+@itinerary_data_bp.route("/destinations", methods=["GET"])
+@jwt_required()
+def get_destinations():
+    """
+    Get all destinations
+    ---
+    tags:
+      - Destinations
+    security:
+      - Bearer: []
+
+    responses:
+      200:
+        description: Destinations fetched successfully
+      401:
+        description: Authentication required
+      500:
+        description: Internal server error
+    """
+
+    try:
+        destinations = Destination.query.filter_by(
+            is_active=True
+        ).order_by(
+            Destination.name.asc()
+        ).all()
+
+        destination_list = []
+
+        for destination in destinations:
+            destination_list.append({
+                "id": str(destination.id),
+                "name": destination.name,
+                "slug": destination.slug,
+                "description": destination.description,
+                "short_description": destination.short_description,
+                "destination_type": destination.destination_type,
+                "region": destination.region,
+                "district": destination.district,
+                "is_active": destination.is_active,
+
+                "images": [
+                    {
+                        "id": str(image.id),
+                        "image_url": image.image_url,
+                        "caption": image.caption,
+                        "alt_text": image.alt_text,
+                        "sort_order": image.sort_order
+                    }
+                    for image in destination.images
+                    if image.is_active
+                ],
+
+                "accommodations": [
+                    {
+                        "id": str(accommodation.id),
+                        "name": accommodation.name,
+                        "description": accommodation.description,
+                        "accommodation_type": accommodation.accommodation_type,
+                        "address": accommodation.address,
+                        "rating": (
+                            float(accommodation.rating)
+                            if accommodation.rating is not None
+                            else None
+                        )
+                    }
+                    for accommodation in destination.accommodations
+                    if accommodation.is_active
+                ],
+
+                "activities": [
+                    {
+                        "id": str(activity.id),
+                        "name": activity.name,
+                        "description": activity.description,
+                        "activity_type": activity.activity_type,
+                        "duration_minutes": activity.duration_minutes
+                    }
+                    for activity in destination.activities
+                    if activity.is_active
+                ],
+
+                "created_at": (
+                    destination.created_at.isoformat()
+                    if destination.created_at
+                    else None
+                ),
+
+                "updated_at": (
+                    destination.updated_at.isoformat()
+                    if destination.updated_at
+                    else None
+                )
+            })
+
+        return jsonify({
+            "success": True,
+            "count": len(destination_list),
+            "destinations": destination_list
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "message": "Failed to fetch destinations",
+            "error": str(e)
+        }), 500
