@@ -1,22 +1,22 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt
 from slugify import slugify
-from app import db
 from datetime import date
+from config.extensions import db
 from datetime import datetime
-from models.itinerary import Destination, DestinationImage, Accommodation, AccommodationImage, AccommodationRate
-from models.itinerary import Activity, ActivityImage, ActivityRate, Itinerary, ItineraryDayActivity
+from models.itinerary import Destination, DestinationImage, Accommodation, AccommodationImage, AccommodationRate, Activity, ActivityImage, ActivityRate
+
 
 itinerary_data_bp = Blueprint("destination", __name__, url_prefix="/api/itinerary_data")
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/create_destination", methods=["POST"])
 @jwt_required()
 def create_destination():
     """
     Create a new destination
     ---
     tags:
-      - Destinations
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -170,14 +170,14 @@ def create_destination():
             "error": str(e)
         }), 500
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/add_destination_image", methods=["POST"])
 @jwt_required()
 def create_destination_image():
     """
     Add an image to a destination
     ---
     tags:
-      - Destination Images
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -338,14 +338,14 @@ def create_destination_image():
         }), 500
 
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/create_accomadation", methods=["POST"])
 @jwt_required()
 def create_accommodation():
     """
     Create a new accommodation
     ---
     tags:
-      - Accommodations
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -555,14 +555,14 @@ def create_accommodation():
             "error": str(e)
         }), 500
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/insert_accomadation_image", methods=["POST"])
 @jwt_required()
 def create_accommodation_image():
     """
     Add an image to an accommodation
     ---
     tags:
-      - Accommodation Images
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -724,14 +724,14 @@ def create_accommodation_image():
             "error": str(e)
         }), 500
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/create_accomadation_rate", methods=["POST"])
 @jwt_required()
 def create_accommodation_rate():
     """
     Create an accommodation rate
     ---
     tags:
-      - Accommodation Rates
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -964,14 +964,14 @@ def create_accommodation_rate():
             "error": str(e)
         }), 500
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/create_activity", methods=["POST"])
 @jwt_required()
 def create_activity():
     """
     Create a new activity
     ---
     tags:
-      - Activities
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -1172,14 +1172,14 @@ def create_activity():
             "error": str(e)
         }), 500
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/insert_actvity_image", methods=["POST"])
 @jwt_required()
 def create_activity_image():
     """
     Add an image to an activity
     ---
     tags:
-      - Activity Images
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -1340,14 +1340,14 @@ def create_activity_image():
         }), 500
 
 
-@itinerary_data_bp.route("", methods=["POST"])
+@itinerary_data_bp.route("/create_actvity_rate", methods=["POST"])
 @jwt_required()
 def create_activity_rate():
     """
     Create an activity rate
     ---
     tags:
-      - Activity Rates
+      - itinerary_data
     security:
       - Bearer: []
     consumes:
@@ -1602,485 +1602,4 @@ def create_activity_rate():
             "message": "Failed to create activity rate",
             "error": str(e)
         }), 500
-
-@itinerary_data_bp.route("", methods=["POST"])
-@jwt_required()
-def create_itinerary():
-    """
-    Create a new itinerary
-    ---
-    tags:
-      - Itineraries
-    security:
-      - Bearer: []
-    consumes:
-      - application/json
-
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - name
-            - number_of_days
-            - number_of_nights
-          properties:
-            name:
-              type: string
-              example: "7 Days Uganda Wildlife Safari"
-            description:
-              type: string
-              example: "A seven-day safari exploring Uganda's wildlife and natural beauty."
-            number_of_days:
-              type: integer
-              example: 7
-            number_of_nights:
-              type: integer
-              example: 6
-            start_date:
-              type: string
-              format: date
-              example: "2026-10-01"
-            end_date:
-              type: string
-              format: date
-              example: "2026-10-07"
-            is_active:
-              type: boolean
-              example: true
-
-    responses:
-      201:
-        description: Itinerary created successfully
-      400:
-        description: Validation error
-      401:
-        description: Authentication required
-      403:
-        description: Admin access required
-      409:
-        description: Itinerary already exists
-      500:
-        description: Internal server error
-    """
-
-    try:
-        # Check admin role
-        claims = get_jwt()
-        role = claims.get("role")
-
-        if role not in ["admin", "super_admin"]:
-            return jsonify({
-                "success": False,
-                "message": "Admin access required"
-            }), 403
-
-        # Get request data
-        data = request.get_json()
-
-        if not data:
-            return jsonify({
-                "success": False,
-                "message": "Request body is required"
-            }), 400
-
-        # Required fields
-        name = data.get("name")
-        number_of_days = data.get("number_of_days")
-        number_of_nights = data.get("number_of_nights")
-
-        if not name:
-            return jsonify({
-                "success": False,
-                "message": "Itinerary name is required"
-            }), 400
-
-        if number_of_days is None:
-            return jsonify({
-                "success": False,
-                "message": "number_of_days is required"
-            }), 400
-
-        if number_of_nights is None:
-            return jsonify({
-                "success": False,
-                "message": "number_of_nights is required"
-            }), 400
-
-        # Clean name
-        name = name.strip()
-
-        if not name:
-            return jsonify({
-                "success": False,
-                "message": "Itinerary name cannot be empty"
-            }), 400
-
-        # Validate number of days
-        try:
-            number_of_days = int(number_of_days)
-        except (TypeError, ValueError):
-            return jsonify({
-                "success": False,
-                "message": "number_of_days must be an integer"
-            }), 400
-
-        if number_of_days < 1:
-            return jsonify({
-                "success": False,
-                "message": "number_of_days must be at least 1"
-            }), 400
-
-        # Validate number of nights
-        try:
-            number_of_nights = int(number_of_nights)
-        except (TypeError, ValueError):
-            return jsonify({
-                "success": False,
-                "message": "number_of_nights must be an integer"
-            }), 400
-
-        if number_of_nights < 0:
-            return jsonify({
-                "success": False,
-                "message": "number_of_nights cannot be negative"
-            }), 400
-
-        # Normally nights should not exceed days
-        if number_of_nights > number_of_days:
-            return jsonify({
-                "success": False,
-                "message": "number_of_nights cannot be greater than number_of_days"
-            }), 400
-
-        # Optional fields
-        description = data.get("description")
-        start_date = data.get("start_date")
-        end_date = data.get("end_date")
-        is_active = data.get("is_active", True)
-
-        # Parse start date
-        if start_date:
-            try:
-                start_date = date.fromisoformat(start_date)
-            except (TypeError, ValueError):
-                return jsonify({
-                    "success": False,
-                    "message": "start_date must be in YYYY-MM-DD format"
-                }), 400
-
-        # Parse end date
-        if end_date:
-            try:
-                end_date = date.fromisoformat(end_date)
-            except (TypeError, ValueError):
-                return jsonify({
-                    "success": False,
-                    "message": "end_date must be in YYYY-MM-DD format"
-                }), 400
-
-        # Validate date range
-        if start_date and end_date:
-            if end_date < start_date:
-                return jsonify({
-                    "success": False,
-                    "message": "end_date cannot be before start_date"
-                }), 400
-
-            expected_days = (end_date - start_date).days + 1
-            expected_nights = (end_date - start_date).days
-
-            if expected_days != number_of_days:
-                return jsonify({
-                    "success": False,
-                    "message": (
-                        f"The selected dates represent {expected_days} days, "
-                        f"but number_of_days is {number_of_days}"
-                    )
-                }), 400
-
-            if expected_nights != number_of_nights:
-                return jsonify({
-                    "success": False,
-                    "message": (
-                        f"The selected dates represent {expected_nights} nights, "
-                        f"but number_of_nights is {number_of_nights}"
-                    )
-                }), 400
-
-        # Check duplicate itinerary name
-        existing_itinerary = Itinerary.query.filter(
-            db.func.lower(Itinerary.name) == name.lower()
-        ).first()
-
-        if existing_itinerary:
-            return jsonify({
-                "success": False,
-                "message": "An itinerary with this name already exists"
-            }), 409
-
-        # Create itinerary
-        itinerary = Itinerary(
-            name=name,
-            description=description,
-            number_of_days=number_of_days,
-            number_of_nights=number_of_nights,
-            start_date=start_date,
-            end_date=end_date,
-            is_active=is_active
-        )
-
-        db.session.add(itinerary)
-        db.session.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Itinerary created successfully",
-            "itinerary": {
-                "id": str(itinerary.id),
-                "name": itinerary.name,
-                "description": itinerary.description,
-                "number_of_days": itinerary.number_of_days,
-                "number_of_nights": itinerary.number_of_nights,
-                "start_date": (
-                    itinerary.start_date.isoformat()
-                    if itinerary.start_date
-                    else None
-                ),
-                "end_date": (
-                    itinerary.end_date.isoformat()
-                    if itinerary.end_date
-                    else None
-                ),
-                "is_active": itinerary.is_active,
-                "created_at": (
-                    itinerary.created_at.isoformat()
-                    if itinerary.created_at
-                    else None
-                ),
-                "updated_at": (
-                    itinerary.updated_at.isoformat()
-                    if itinerary.updated_at
-                    else None
-                )
-            }
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-
-        return jsonify({
-            "success": False,
-            "message": "Failed to create itinerary",
-            "error": str(e)
-        }), 500
-
-@itinerary_data_bp.route("", methods=["POST"])
-@jwt_required()
-def create_itinerary_day_activity():
-    """
-    Add an activity to an itinerary day
-    ---
-    tags:
-      - Itinerary Day Activities
-    security:
-      - Bearer: []
-    consumes:
-      - application/json
-
-    parameters:
-      - in: body
-        name: body
-        required: true
-        schema:
-          type: object
-          required:
-            - itinerary_day_id
-            - activity_id
-          properties:
-            itinerary_day_id:
-              type: string
-              format: uuid
-              example: "550e8400-e29b-41d4-a716-446655440000"
-            activity_id:
-              type: string
-              format: uuid
-              example: "550e8400-e29b-41d4-a716-446655440001"
-            sort_order:
-              type: integer
-              example: 1
-            start_time:
-              type: string
-              example: "09:00"
-            notes:
-              type: string
-              example: "Morning chimpanzee tracking activity."
-
-    responses:
-      201:
-        description: Activity added to itinerary day successfully
-      400:
-        description: Validation error
-      401:
-        description: Authentication required
-      403:
-        description: Admin access required
-      404:
-        description: Itinerary day or activity not found
-      409:
-        description: Activity already exists on this itinerary day
-      500:
-        description: Internal server error
-    """
-
-    try:
-        # Check admin role
-        claims = get_jwt()
-        role = claims.get("role")
-
-        if role not in ["admin", "super_admin"]:
-            return jsonify({
-                "success": False,
-                "message": "Admin access required"
-            }), 403
-
-        # Get request data
-        data = request.get_json()
-
-        if not data:
-            return jsonify({
-                "success": False,
-                "message": "Request body is required"
-            }), 400
-
-        itinerary_day_id = data.get("itinerary_day_id")
-        activity_id = data.get("activity_id")
-
-        if not itinerary_day_id:
-            return jsonify({
-                "success": False,
-                "message": "itinerary_day_id is required"
-            }), 400
-
-        if not activity_id:
-            return jsonify({
-                "success": False,
-                "message": "activity_id is required"
-            }), 400
-
-        # Check itinerary day exists
-        itinerary_day = Itinerary.query.get(itinerary_day_id)
-
-        if not itinerary_day:
-            return jsonify({
-                "success": False,
-                "message": "Itinerary day not found"
-            }), 404
-
-        # Check activity exists
-        activity = Activity.query.get(activity_id)
-
-        if not activity:
-            return jsonify({
-                "success": False,
-                "message": "Activity not found"
-            }), 404
-
-        # Optional fields
-        sort_order = data.get("sort_order", 0)
-        start_time = data.get("start_time")
-        notes = data.get("notes")
-
-        # Validate sort order
-        try:
-            sort_order = int(sort_order)
-        except (TypeError, ValueError):
-            return jsonify({
-                "success": False,
-                "message": "sort_order must be an integer"
-            }), 400
-
-        if sort_order < 0:
-            return jsonify({
-                "success": False,
-                "message": "sort_order cannot be negative"
-            }), 400
-
-        # Parse start time
-        if start_time:
-            try:
-                start_time = datetime.strptime(
-                    start_time,
-                    "%H:%M"
-                ).time()
-            except (TypeError, ValueError):
-                return jsonify({
-                    "success": False,
-                    "message": "start_time must be in HH:MM format"
-                }), 400
-
-        # Check if activity is already assigned to this itinerary day
-        existing_activity = ItineraryDayActivity.query.filter_by(
-            itinerary_day_id=itinerary_day_id,
-            activity_id=activity_id
-        ).first()
-
-        if existing_activity:
-            return jsonify({
-                "success": False,
-                "message": "This activity is already assigned to this itinerary day"
-            }), 409
-
-        # Create itinerary day activity
-        itinerary_day_activity = ItineraryDayActivity(
-            itinerary_day_id=itinerary_day_id,
-            activity_id=activity_id,
-            sort_order=sort_order,
-            start_time=start_time,
-            notes=notes
-        )
-
-        db.session.add(itinerary_day_activity)
-        db.session.commit()
-
-        return jsonify({
-            "success": True,
-            "message": "Activity added to itinerary day successfully",
-            "itinerary_day_activity": {
-                "id": str(itinerary_day_activity.id),
-                "itinerary_day_id": str(
-                    itinerary_day_activity.itinerary_day_id
-                ),
-                "activity_id": str(
-                    itinerary_day_activity.activity_id
-                ),
-                "sort_order": itinerary_day_activity.sort_order,
-                "start_time": (
-                    itinerary_day_activity.start_time.strftime("%H:%M")
-                    if itinerary_day_activity.start_time
-                    else None
-                ),
-                "notes": itinerary_day_activity.notes
-            }
-        }), 201
-
-    except Exception as e:
-        db.session.rollback()
-
-        return jsonify({
-            "success": False,
-            "message": "Failed to add activity to itinerary day",
-            "error": str(e)
-        }), 500   
-
-
-
-
-
-
-
-
-
 
