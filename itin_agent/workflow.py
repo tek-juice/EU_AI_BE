@@ -13,7 +13,6 @@ Tools / backend services are responsible for:
     - Destinations
     - Activities
     - Accommodation
-    - Prices
     - Business rules
 """
 

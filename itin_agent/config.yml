@@ -1,0 +1,30 @@
+functions:
+
+  get_destinations:
+    _type: get_destinations
+
+  get_activities:
+    _type: get_activities
+
+  get_accommodations:
+    _type: get_accommodations
+
+
+llms:
+
+  gemini_llm:
+    _type: litellm
+    model_name: gemini/gemini-2.5-flash
+    api_key: ${GEMINI_API_KEY}
+    temperature: 0.2
+
+
+workflow:
+
+  _type: react_agent
+  llm_name: gemini_llm
+
+  tool_names:
+    - get_destinations
+    - get_activities
+    - get_accommodations

@@ -14,6 +14,7 @@ python-dotenv = "*"
 python-slugify = "*"
 nvidia-nat = "*"
 requests = "*"
+langchain-core = "*"
 
 [dev-packages]
 
