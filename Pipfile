@@ -13,6 +13,7 @@ psycopg2-binary = "*"
 python-dotenv = "*"
 python-slugify = "*"
 nvidia-nat = "*"
+requests = "*"
 
 [dev-packages]
 
