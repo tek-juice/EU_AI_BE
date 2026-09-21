@@ -1,6 +1,6 @@
 
 import json
-from tools.config_tools.api_client import EuitineraryAPI
+from itin_agent.tools.config_tools.api_client import EuitineraryAPI
 from nat.plugin_api import Builder, FunctionBaseConfig, FunctionInfo, register_function
 
 
