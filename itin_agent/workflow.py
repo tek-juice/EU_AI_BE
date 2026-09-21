@@ -5,21 +5,18 @@ This workflow orchestrates the AI itinerary-building process.
 
 The LLM is responsible for:
     - Understanding the customer's request
-    - Deciding which tools are required
-    - Combining tool results
-    - Producing the itinerary
+    - Selecting relevant information
+    - Organizing the itinerary
+    - Producing the final itinerary
 
-The database/API is responsible for:
+Tools / backend services are responsible for:
     - Destinations
     - Activities
     - Accommodation
-    - Transport
     - Prices
     - Business rules
 """
 
-import inspect
-import json
 from typing import Any
 
 
@@ -28,7 +25,11 @@ class ItineraryWorkflow:
     Main workflow for the Everything Uganda itinerary builder.
     """
 
-    def __init__(self, llm: Any, tools: dict[str, Any]):
+    def __init__(
+        self,
+        llm: Any,
+        tools: dict[str, Any],
+    ):
         self.llm = llm
         self.tools = tools
 
@@ -41,35 +42,18 @@ class ItineraryWorkflow:
             user_request
         )
 
-        destinations = await self.search_destinations(
-            requirements
-        )
+        destinations = await self.get_destinations()
 
-        activities = await self.search_activities(
-            requirements,
-            destinations
-        )
+        activities = await self.get_activities()
 
-        accommodations = await self.search_accommodations(
-            requirements,
-            destinations
-        )
-
-
-        pricing = await self.calculate_price(
-            requirements=requirements,
-            destinations=destinations,
-            activities=activities,
-            accommodations=accommodations,
- 
-        )
+        accommodations = await self.get_accommodations()
 
         itinerary = await self.build_itinerary(
             requirements=requirements,
             destinations=destinations,
             activities=activities,
             accommodations=accommodations,
-            pricing=pricing
+    
         )
 
         validated_itinerary = await self.validate_itinerary(
@@ -77,80 +61,21 @@ class ItineraryWorkflow:
         )
 
         return validated_itinerary
-
+    
     async def extract_requirements(
         self,
-        user_request: str
+        user_request: str,
     ) -> dict:
-
         """
         Extract structured requirements from the customer's
         natural-language request.
+
+        NOTE:
+        This is currently a placeholder. The LLM should eventually
+        perform this extraction.
         """
 
-        schema = {
-            "title": "ItineraryRequirements",
-            "type": "object",
-            "properties": {
-                "travelers": {"type": ["integer", "null"]},
-                "number_of_days": {"type": ["integer", "null"]},
-                "number_of_nights": {"type": ["integer", "null"]},
-                "start_date": {"type": ["string", "null"]},
-                "end_date": {"type": ["string", "null"]},
-                "budget": {"type": ["number", "null"]},
-                "currency": {"type": "string"},
-                "interests": {
-                    "type": "array",
-                    "items": {"type": "string"},
-                },
-                "accommodation_preference": {"type": ["string", "null"]},
-            },
-            "required": [
-                "travelers",
-                "number_of_days",
-                "number_of_nights",
-                "start_date",
-                "end_date",
-                "budget",
-                "currency",
-                "interests",
-                "accommodation_preference",
-            ],
-        }
-
-        prompt = (
-            "Extract itinerary requirements from this customer request. "
-            "Return only JSON matching this schema: "
-            f"{json.dumps(schema, separators=(',', ':'))}\n\n"
-            f"Customer request: {user_request}"
-        )
-
-        llm = self.llm
-        if hasattr(llm, "with_structured_output"):
-            llm = llm.with_structured_output(schema)
-
-        if hasattr(llm, "ainvoke"):
-            result = await llm.ainvoke(prompt)
-        elif hasattr(llm, "invoke"):
-            result = llm.invoke(prompt)
-        else:
-            result = llm(prompt)
-
-        if inspect.isawaitable(result):
-            result = await result
-
-        if not isinstance(result, dict):
-            content = getattr(result, "content", result)
-            if isinstance(content, str):
-                content = content.strip()
-                if content.startswith("```"):
-                    content = content.strip("`")
-                    content = content.removeprefix("json").strip()
-                result = json.loads(content)
-            else:
-                result = dict(content)
-
-        requirements = {
+        return {
             "raw_request": user_request,
             "travelers": None,
             "number_of_days": None,
@@ -162,132 +87,49 @@ class ItineraryWorkflow:
             "interests": [],
             "accommodation_preference": None,
         }
-        requirements.update({
-            key: result.get(key, requirements[key])
-            for key in requirements
-            if key != "raw_request"
-        })
-        requirements["currency"] = (
-            requirements.get("currency") or "USD"
-        ).upper()
-        requirements["interests"] = requirements.get("interests") or []
 
-        return requirements
-
-    async def search_destinations(
-        self,
-        requirements: dict
-    ) -> list:
-
+    async def get_destinations(self) -> list:
         """
-        Find destinations matching the customer's requirements.
+        Get available destinations from the Everything Uganda API.
         """
 
-        tool = self.tools.get("search_destinations")
+        tool = self.tools.get("get_destinations")
 
         if not tool:
             raise RuntimeError(
-                "search_destinations tool is not registered"
+                "get_destinations tool is not registered"
             )
 
-        return await tool(requirements)
+        return await tool()
 
-    async def search_activities(
-        self,
-        requirements: dict,
-        destinations: list
-    ) -> list:
 
+    async def get_activities(self) -> list:
         """
-        Find activities available at the selected destinations.
+        Get available activities from the Everything Uganda API.
         """
 
-        tool = self.tools.get("search_activities")
+        tool = self.tools.get("get_activities")
 
         if not tool:
             raise RuntimeError(
-                "search_activities tool is not registered"
+                "get_activities tool is not registered"
             )
 
-        return await tool(
-            requirements,
-            destinations
-        )
+        return await tool()
 
-    async def search_accommodations(
-        self,
-        requirements: dict,
-        destinations: list
-    ) -> list:
-
+    async def get_accommodations(self) -> list:
         """
-        Find accommodation options for the selected destinations.
+        Get available accommodation from the Everything Uganda API.
         """
 
-        tool = self.tools.get("search_accommodations")
+        tool = self.tools.get("get_accommodations")
 
         if not tool:
             raise RuntimeError(
-                "search_accommodations tool is not registered"
+                "get_accommodations tool is not registered"
             )
 
-        return await tool(
-            requirements,
-            destinations
-        )
-
-    async def search_transport(
-        self,
-        requirements: dict,
-        destinations: list
-    ) -> list:
-
-        """
-        Find appropriate transport options.
-        """
-
-        tool = self.tools.get("search_transport")
-
-        if not tool:
-            raise RuntimeError(
-                "search_transport tool is not registered"
-            )
-
-        return await tool(
-            requirements,
-            destinations
-        )
-
-    async def calculate_price(
-        self,
-        requirements: dict,
-        destinations: list,
-        activities: list,
-        accommodations: list,
-        transport: list
-    ) -> dict:
-
-        """
-        Calculate the itinerary price using backend pricing
-        logic.
-
-        The LLM must NOT calculate authoritative prices.
-        """
-
-        tool = self.tools.get("calculate_itinerary_price")
-
-        if not tool:
-            raise RuntimeError(
-                "calculate_itinerary_price tool is not registered"
-            )
-
-        return await tool(
-            requirements=requirements,
-            destinations=destinations,
-            activities=activities,
-            accommodations=accommodations,
-            transport=transport
-        )
+        return await tool()
 
     async def build_itinerary(
         self,
@@ -295,38 +137,34 @@ class ItineraryWorkflow:
         destinations: list,
         activities: list,
         accommodations: list,
-        transport: list,
-        pricing: dict
-    ) -> dict:
 
+    ) -> dict:
         """
         Use the LLM to organize the available data into a
         day-by-day itinerary.
-        """
 
-        # TODO:
-        # This will use the NAT LLM/workflow implementation.
+        This will later call the configured LLM.
+        """
 
         return {
             "requirements": requirements,
             "destinations": destinations,
             "activities": activities,
             "accommodations": accommodations,
-            "transport": transport,
-            "pricing": pricing,
-            "days": []
+            "days": [],
         }
 
     async def validate_itinerary(
         self,
-        itinerary: dict
+        itinerary: dict,
     ) -> dict:
-
         """
         Validate the generated itinerary against business rules.
         """
 
-        tool = self.tools.get("validate_itinerary")
+        tool = self.tools.get(
+            "validate_itinerary"
+        )
 
         if not tool:
             raise RuntimeError(

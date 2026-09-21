@@ -6,11 +6,11 @@ api = EuitineraryAPI()
 
 async def get_activities() -> list:
     """
-    Get all available activities from the Everything Uganda API.
+    Get all activities from the Everything Uganda API.
     """
 
     response = api.get(
         "/itinerary_data/activities"
     )
 
-    return response
+    return response.get("activities", [])

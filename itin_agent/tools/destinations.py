@@ -4,11 +4,11 @@ api = EuitineraryAPI()
 
 async def get_destinations() -> list:
     """
-    Get all available destinations from the Everything Uganda API.
+    Get all active destinations from the Everything Uganda API.
     """
 
     response = api.get(
         "/itinerary_data/destinations"
     )
 
-    return response
+    return response.get("destinations", [])
