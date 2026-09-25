@@ -9,6 +9,8 @@ from routes.client_auth import client_auth_bp
 from routes.admin_auth import admin_auth_bp
 from routes.itinerary_data import itinerary_data_bp
 
+from routes.current_user import itin_agent_bp
+
 
 app = Flask(__name__)
 
@@ -68,6 +70,7 @@ Swagger(
 app.register_blueprint(client_auth_bp)
 app.register_blueprint(admin_auth_bp)
 app.register_blueprint(itinerary_data_bp)
+app.register_blueprint(itin_agent_bp)
 
 
 if __name__ == "__main__":
