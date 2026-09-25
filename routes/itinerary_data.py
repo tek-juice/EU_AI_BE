@@ -5,12 +5,12 @@ from datetime import date
 from config.extensions import db
 from datetime import datetime
 from models.itinerary import Destination, DestinationImage, Accommodation, AccommodationImage, AccommodationRate, Activity, ActivityImage, ActivityRate
-
+from decorators.deco import admin_required, client_required, any_authenticated_required
 
 itinerary_data_bp = Blueprint("destination", __name__, url_prefix="/api/itinerary_data")
 
 @itinerary_data_bp.route("/create_destination", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_destination():
     """
     Create a new destination
@@ -171,7 +171,7 @@ def create_destination():
         }), 500
 
 @itinerary_data_bp.route("/add_destination_image", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_destination_image():
     """
     Add an image to a destination
@@ -339,7 +339,7 @@ def create_destination_image():
 
 
 @itinerary_data_bp.route("/create_accomadation", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_accommodation():
     """
     Create a new accommodation
@@ -556,7 +556,7 @@ def create_accommodation():
         }), 500
 
 @itinerary_data_bp.route("/insert_accomadation_image", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_accommodation_image():
     """
     Add an image to an accommodation
@@ -725,7 +725,7 @@ def create_accommodation_image():
         }), 500
 
 @itinerary_data_bp.route("/create_accomadation_rate", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_accommodation_rate():
     """
     Create an accommodation rate
@@ -965,7 +965,7 @@ def create_accommodation_rate():
         }), 500
 
 @itinerary_data_bp.route("/create_activity", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_activity():
     """
     Create a new activity
@@ -1173,7 +1173,7 @@ def create_activity():
         }), 500
 
 @itinerary_data_bp.route("/insert_actvity_image", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_activity_image():
     """
     Add an image to an activity
@@ -1341,7 +1341,7 @@ def create_activity_image():
 
 
 @itinerary_data_bp.route("/create_actvity_rate", methods=["POST"])
-@jwt_required()
+@admin_required
 def create_activity_rate():
     """
     Create an activity rate
@@ -1605,6 +1605,7 @@ def create_activity_rate():
 
 # FETCH THE DATA
 @itinerary_data_bp.route("/destinations", methods=["GET"])
+@any_authenticated_required
 def get_destinations():
     """
     Get all destinations
@@ -1712,6 +1713,7 @@ def get_destinations():
         }), 500
 
 @itinerary_data_bp.route("/accommodations", methods=["GET"])
+@any_authenticated_required
 def get_accommodations():
     """
     Get all active accommodations
@@ -1812,6 +1814,7 @@ def get_accommodations():
         }), 500
 
 @itinerary_data_bp.route("/accommodation-rates", methods=["GET"])
+@any_authenticated_required
 def get_accommodation_rates():
     """
     Get all active accommodation rates
@@ -1886,7 +1889,9 @@ def get_accommodation_rates():
             "error": str(e)
         }), 500
 
+
 @itinerary_data_bp.route("/activities", methods=["GET"])
+@any_authenticated_required
 def get_activities():
     """
     Get all active activities
@@ -1983,6 +1988,7 @@ def get_activities():
         }), 500
 
 @itinerary_data_bp.route("/activity-rates", methods=["GET"])
+@any_authenticated_required
 def get_activity_rates():
     """
     Get all active activity rates
