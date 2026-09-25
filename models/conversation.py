@@ -7,7 +7,7 @@ class Conversation(db.Model):
 
     id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    itinerary_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey("itineraries.id", ondelete="SET NULL"), nullable=True, index=True)
+    itinerary = db.relationship("Itinerary", back_populates="conversations")
     title = db.Column(db.String(255), nullable=True)
     status = db.Column(db.String(50), nullable=False, default="active")
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())

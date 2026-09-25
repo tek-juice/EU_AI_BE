@@ -14,15 +14,34 @@ class User(db.Model):
     phone = db.Column(db.String(30), nullable=True)
     password_hash = db.Column(db.Text, nullable=False)
     role = db.Column(db.String(30), nullable=False, default="client")
-    is_active = db.Column(db.Boolean, nullable=False, default=True)
-    created_at = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
-    updated_at = db.Column(db.DateTime(timezone=True), nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column( db.Boolean, nullable=False, default=True)
+    created_at = db.Column( db.DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+
+    updated_at = db.Column(
+        db.DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow
+    )
 
     __table_args__ = (
         db.CheckConstraint(
             "role IN ('client', 'admin', 'super_admin')",
             name="check_user_role"
         ),
+    )
+
+
+    conversations = db.relationship(
+        "Conversation",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    itineraries = db.relationship(
+        "Itinerary",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
 
     def __repr__(self):

@@ -4,7 +4,7 @@ from slugify import slugify
 from datetime import date
 from config.extensions import db
 from datetime import datetime
-from models.itinerary import Destination, DestinationImage, Accommodation, AccommodationImage, AccommodationRate, Activity, ActivityImage, ActivityRate
+from models.itinerary_data import Destination, DestinationImage, Accommodation, AccommodationImage, AccommodationRate, Activity, ActivityImage, ActivityRate
 from decorators.deco import admin_required, client_required, any_authenticated_required
 
 itinerary_data_bp = Blueprint("destination", __name__, url_prefix="/api/itinerary_data")
