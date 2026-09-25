@@ -1605,7 +1605,6 @@ def create_activity_rate():
 
 # FETCH THE DATA
 @itinerary_data_bp.route("/destinations", methods=["GET"])
-@jwt_required()
 def get_destinations():
     """
     Get all destinations
@@ -1713,7 +1712,6 @@ def get_destinations():
         }), 500
 
 @itinerary_data_bp.route("/accommodations", methods=["GET"])
-@jwt_required()
 def get_accommodations():
     """
     Get all active accommodations
@@ -1814,7 +1812,6 @@ def get_accommodations():
         }), 500
 
 @itinerary_data_bp.route("/accommodation-rates", methods=["GET"])
-@jwt_required()
 def get_accommodation_rates():
     """
     Get all active accommodation rates
@@ -1890,7 +1887,6 @@ def get_accommodation_rates():
         }), 500
 
 @itinerary_data_bp.route("/activities", methods=["GET"])
-@jwt_required()
 def get_activities():
     """
     Get all active activities
@@ -1987,7 +1983,6 @@ def get_activities():
         }), 500
 
 @itinerary_data_bp.route("/activity-rates", methods=["GET"])
-@jwt_required()
 def get_activity_rates():
     """
     Get all active activity rates

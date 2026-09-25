@@ -12,6 +12,9 @@ flasgger = "*"
 psycopg2-binary = "*"
 python-dotenv = "*"
 python-slugify = "*"
+requests = "*"
+langchain-core = "*"
+nvidia-nat = {extras = ["langchain"], version = "*"}
 
 [dev-packages]
 
